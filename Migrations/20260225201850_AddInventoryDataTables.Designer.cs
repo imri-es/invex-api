@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using invex_api.Data;
@@ -11,9 +12,11 @@ using invex_api.Data;
 namespace invex_api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260225201850_AddInventoryDataTables")]
+    partial class AddInventoryDataTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -244,10 +247,6 @@ namespace invex_api.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("CustomIdMask")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
@@ -305,6 +304,35 @@ namespace invex_api.Migrations
                     b.ToTable("InventoryAccesses");
                 });
 
+            modelBuilder.Entity("invex_api.Models.InventoryCustomId", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ElementId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("InventoryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InventoryId");
+
+                    b.ToTable("InventoryCustomIds");
+                });
+
             modelBuilder.Entity("invex_api.Models.InventoryData", b =>
                 {
                     b.Property<Guid>("Id")
@@ -338,8 +366,6 @@ namespace invex_api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
-
                     b.HasIndex("InventoryId");
 
                     b.ToTable("InventoryData");
@@ -368,25 +394,6 @@ namespace invex_api.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.HasKey("Id");
-
-                    b.HasIndex("InventoryId");
-
-                    b.ToTable("InventoryFields");
-                });
-
-            modelBuilder.Entity("invex_api.Models.InventoryFieldData", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("CustomFieldId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("InventoryDataId")
-                        .HasColumnType("uuid");
-
                     b.Property<bool?>("ValueBoolean")
                         .HasColumnType("boolean");
 
@@ -398,61 +405,9 @@ namespace invex_api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CustomFieldId");
-
-                    b.HasIndex("InventoryDataId");
-
-                    b.HasIndex("InventoryDataId", "CustomFieldId")
-                        .IsUnique();
-
-                    b.ToTable("InventoryFieldData");
-                });
-
-            modelBuilder.Entity("invex_api.Models.InventoryPost", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("InventoryId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedAt");
-
                     b.HasIndex("InventoryId");
 
-                    b.HasIndex("UserId");
-
-                    b.ToTable("InventoryPosts");
-                });
-
-            modelBuilder.Entity("invex_api.Models.InventoryPostLike", b =>
-                {
-                    b.Property<Guid>("PostId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("UserId")
-                        .HasColumnType("text");
-
-                    b.HasKey("PostId", "UserId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("InventoryPostLikes");
+                    b.ToTable("InventoryFields");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -536,6 +491,17 @@ namespace invex_api.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("invex_api.Models.InventoryCustomId", b =>
+                {
+                    b.HasOne("invex_api.Models.Inventory", "Inventory")
+                        .WithMany("CustomIds")
+                        .HasForeignKey("InventoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Inventory");
+                });
+
             modelBuilder.Entity("invex_api.Models.InventoryData", b =>
                 {
                     b.HasOne("invex_api.Models.Inventory", "Inventory")
@@ -558,98 +524,22 @@ namespace invex_api.Migrations
                     b.Navigation("Inventory");
                 });
 
-            modelBuilder.Entity("invex_api.Models.InventoryFieldData", b =>
-                {
-                    b.HasOne("invex_api.Models.InventoryField", "CustomField")
-                        .WithMany("FieldData")
-                        .HasForeignKey("CustomFieldId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("invex_api.Models.InventoryData", "InventoryData")
-                        .WithMany("FieldData")
-                        .HasForeignKey("InventoryDataId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("CustomField");
-
-                    b.Navigation("InventoryData");
-                });
-
-            modelBuilder.Entity("invex_api.Models.InventoryPost", b =>
-                {
-                    b.HasOne("invex_api.Models.Inventory", "Inventory")
-                        .WithMany("Posts")
-                        .HasForeignKey("InventoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("invex_api.Models.ApplicationUser", "User")
-                        .WithMany("Posts")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Inventory");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("invex_api.Models.InventoryPostLike", b =>
-                {
-                    b.HasOne("invex_api.Models.InventoryPost", "Post")
-                        .WithMany("Likes")
-                        .HasForeignKey("PostId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("invex_api.Models.ApplicationUser", "User")
-                        .WithMany("PostLikes")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Post");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("invex_api.Models.ApplicationUser", b =>
                 {
                     b.Navigation("InventoryAccesses");
 
                     b.Navigation("OwnedInventories");
-
-                    b.Navigation("PostLikes");
-
-                    b.Navigation("Posts");
                 });
 
             modelBuilder.Entity("invex_api.Models.Inventory", b =>
                 {
                     b.Navigation("Accesses");
 
+                    b.Navigation("CustomIds");
+
                     b.Navigation("Fields");
 
                     b.Navigation("Items");
-
-                    b.Navigation("Posts");
-                });
-
-            modelBuilder.Entity("invex_api.Models.InventoryData", b =>
-                {
-                    b.Navigation("FieldData");
-                });
-
-            modelBuilder.Entity("invex_api.Models.InventoryField", b =>
-                {
-                    b.Navigation("FieldData");
-                });
-
-            modelBuilder.Entity("invex_api.Models.InventoryPost", b =>
-                {
-                    b.Navigation("Likes");
                 });
 #pragma warning restore 612, 618
         }

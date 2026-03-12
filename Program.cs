@@ -38,6 +38,12 @@ builder
 // Add TokenService
 builder.Services.AddScoped<TokenService>();
 
+// Add CustomIdGeneratorService
+builder.Services.AddSingleton<CustomIdGeneratorService>();
+
+// Add S3StorageService
+builder.Services.AddSingleton<S3StorageService>();
+
 // Add Authentication
 builder
     .Services.AddAuthentication(options =>
