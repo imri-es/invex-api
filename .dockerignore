@@ -1,0 +1,18 @@
+# Directories
+bin/
+obj/
+TestResults/
+.vs/
+.vscode/
+
+# Environment files
+.env
+.env.*
+
+# Miscellaneous
+*.suo
+*.user
+*.log
+*.sqlite
+*.mdf
+*.ldf
